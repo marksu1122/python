@@ -2,20 +2,25 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame
 
-pd_data = pd.read_csv('/Users/marksu/Downloads/Reviews.csv')[:10000]
+import pandas as pd
+import numpy as np
+from pandas import DataFrame
+
+pd_data = pd.read_csv('/Users/marksu/Downloads/Reviews.csv', index_col=0)[:10000]
 
 df = pd.DataFrame(pd_data)
+df = df.drop(df.columns[[0,3,4,6,7,8]],1) 
 
-
-df = df.drop(df.columns[[4,5,7,8,9]],1) 
 count = df.groupby('UserId').count()
-count = count.drop(count.columns[[1,2,3]], axis=1) 
-count.rename(columns={'Id':'Count'},inplace = True)
+count = count.drop(['Score'],1) 
+count.rename(columns={'ProfileName':'Count'},inplace = True)
 df = pd.merge(df, count, on=['UserId'])
-df.sort_values(by = ['Count','UserId'],inplace = True,ascending=False)
+
+df.sort_values(by = ['Count','UserId','ProfileName'],inplace = True,ascending=False)
 mean = df.groupby('UserId')['Score'].agg(['mean', 'sum'])
 df = pd.merge(df, mean, on=['UserId'])
-df=df.drop_duplicates(['UserId']).head(10)
+
+df=df.drop_duplicates(['UserId']).drop(['Score','Count'],1).head(10)
 df.rename(columns={'mean':'Score mean','sum':'Score count'},inplace = True)
 
 print (df)
