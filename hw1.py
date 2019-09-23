@@ -2,10 +2,6 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame
 
-import pandas as pd
-import numpy as np
-from pandas import DataFrame
-
 pd_data = pd.read_csv('/Users/marksu/Downloads/Reviews.csv', index_col=0)[:10000]
 
 df = pd.DataFrame(pd_data)
@@ -17,11 +13,11 @@ count.rename(columns={'ProfileName':'Count'},inplace = True)
 df = pd.merge(df, count, on=['UserId'])
 
 df.sort_values(by = ['Count','UserId','ProfileName'],inplace = True,ascending=False)
-mean = df.groupby('UserId')['Score'].agg(['mean', 'sum'])
+mean = df.groupby('UserId')['Score'].mean()
 df = pd.merge(df, mean, on=['UserId'])
 
-df=df.drop_duplicates(['UserId']).drop(['Score','Count'],1).head(10)
-df.rename(columns={'mean':'Score mean','sum':'Score count'},inplace = True)
+df=df.drop_duplicates(['UserId']).drop(['Score_x'],1).head(10)
+df.rename(columns={'Score_y':'Score mean'},inplace = True)
 
 print (df)
 #df.insert(4,column='times',value=df.groupby(['UserId']).count())
