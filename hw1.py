@@ -18,7 +18,7 @@ df = pd.merge(df, mean, on=['UserId'])
 
 df=df.drop_duplicates(['UserId']).drop(['Score_x'],1).head(10)
 df.rename(columns={'Score_y':'Score mean'},inplace = True)
-
+df = df.reset_index(drop=True)
 print (df)
 #df.insert(4,column='times',value=df.groupby(['UserId']).count())
 #print(df.duplicated(['UserId']))
