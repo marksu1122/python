@@ -26,7 +26,7 @@ df = pd.merge(df, count, on=['UserId'])
 df.sort_values(by = ['Count','UserId'],inplace = True,ascending=False)
 mean = df.groupby('UserId')['Score'].agg(['mean', 'sum'])
 df = pd.merge(df, mean, on=['UserId'])
-df=df.drop_duplicates(['UserId'])
+df=df.drop_duplicates(['UserId']).head(10)
 
 # print(df)
 print (df)
@@ -50,14 +50,5 @@ with open('/Users/marksu/Downloads/Reviews.csv') as csvfile:
     while i < 10:
         print (date[i])    
         i = i+1
-
-
-
-#显示所有列
-pd.set_option('display.max_columns', None)
-#显示所有行
-pd.set_option('display.max_rows', None)
-#设置value的显示长度为100，默认为50
-pd.set_option('max_colwidth',100)
 
 """
