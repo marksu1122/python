@@ -15,7 +15,7 @@ for itemset in itemsets:
         else: 
             dict2 = {item: 1}
             dic_test.update(dict2)                
-testwww
+            
 #minimal support
 for key in dic_test.copy():
     if(dic_test[key] < minimumSup):
