@@ -1,4 +1,5 @@
-import numpy as np
+import itertools
+
 
 itemsets = [['A','C','D'],['B','C','E'],['A','B','C','E'],['B','E']]
 dic_test={}
@@ -32,13 +33,44 @@ for i in range(len(list1)):
     for j in range(i+1,len(list1)):
         list2.append([str(list1[i]),str(list1[j])])
 
-# TODO search C2 in DB to produce L2
+# search CK support
+def search(ck,dk):
+    for itemset in itemsets:
+        for data in ck:
+            count = dk.get(tuple(data))
+            # TODO
+            if(count == None):
+                count = 0
+            match = 0
+            for thing in data:
+                for item in itemset:
+                    if(thing == item):
+                        match +=1
+                        break
+                if(match == len(data)):
+                    count +=1
+            dk.update({tuple(data):count})
+    return dk        
+
+# produce LK
+def LK(dk,minsup):
+    for key in dk.copy():
+        if(dk[key] < minsup):
+            del dk[key]
+    return dk
 
 
 
-#join parameters:list
-def join(listk):
+
+
+# join parameters:list
+def join(dk):
+    listk = []
     newlist = []
+    for key in dk:
+        listk.append(list(key))
+    listk.sort()
+
     k = len(listk[0])-1 
     for i in range(len(listk)):
         l1 = listk[i]
@@ -52,11 +84,41 @@ def join(listk):
             if(compare):
                 temp = l1.copy()
                 temp.append(str(l2[k]))
-                print(temp)
                 newlist.append(temp)
     return newlist
 
-                   
+# TODO prune step
+def prune(listk,dk):
+    for data in listk:
+        check = 0
+        #subsetcheck
+        for s in itertools.combinations(data, len(data)-1):
+            notfound = True
+            for item in dk:
+                # TODO 比較(list compare?)tuple
+                if(s == item):
+                    check +=1
+                    notfound = False
+                    break     
+            if(notfound):
+                break
+ 
+        if(check != len(data)):
+            listk.remove(data)
+    return listk
 
+# TODO forloop generate CK LK
+dic_1={}
+dic_2={}
+print(list2)
+dic_1 = search(list2,dic_1)
+print("==============>",dic_1)
+dic_1 = LK(dic_1,2)
+print("==============>",dic_1)
+listtest = join(dic_1)
+print("==============>",listtest)
+listtest = prune(listtest,dic_1)
+print("==============>",listtest)
+dic_2 = search(listtest,dic_2)
+print("==============>",dic_2)
 
-print("==============>",join(list2))
