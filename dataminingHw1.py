@@ -1,8 +1,10 @@
 import itertools
 
 
-itemsets = [['A','C','D'],['B','C','E'],['A','B','C','E'],['B','E']]
+#itemsets = [['A','C','D'],['B','C','E'],['A','B','C','E'],['B','E']]
+itemsets = [['Bread','Milk'],['Bread','Diaper','Beer','Eggs'],['Milk','Diaper','Beer','Coke'],['Bread','Milk','Diaper','Beer'],['Bread','Milk','Diaper','Coke']]
 dic_test={}
+minimumSup = 3
 #C1
 for itemset in itemsets:
     for item in itemset:
@@ -16,7 +18,7 @@ for itemset in itemsets:
 
 #minimal support
 for key in dic_test.copy():
-    if(dic_test[key] < 2):
+    if(dic_test[key] < minimumSup):
         del dic_test[key]
 
 #dic_test.update({('A','B'):0})
@@ -53,9 +55,9 @@ def search(ck,dk):
     return dk        
 
 # produce LK
-def LK(dk,minsup):
+def LK(dk):
     for key in dk.copy():
-        if(dk[key] < minsup):
+        if(dk[key] < minimumSup):
             del dk[key]
     return dk
 
@@ -113,7 +115,7 @@ dic_2={}
 print(list2)
 dic_1 = search(list2,dic_1)
 print("==============>",dic_1)
-dic_1 = LK(dic_1,2)
+dic_1 = LK(dic_1)
 print("==============>",dic_1)
 listtest = join(dic_1)
 print("==============>",listtest)
