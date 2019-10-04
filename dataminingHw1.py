@@ -1,7 +1,7 @@
 import itertools
 
-#itemsets = [['A','C','D'],['B','C','E'],['A','B','C','E'],['B','E']]
-itemsets = [['Bread','Milk'],['Bread','Diaper','Beer','Eggs'],['Milk','Diaper','Beer','Coke'],['Bread','Milk','Diaper','Beer'],['Bread','Milk','Diaper','Coke']]
+itemsets = [['A','C','D'],['B','C','E'],['A','B','C','E'],['B','E']]
+#itemsets = [['Bread','Milk'],['Bread','Diaper','Beer','Eggs'],['Milk','Diaper','Beer','Coke'],['Bread','Milk','Diaper','Beer'],['Bread','Milk','Diaper','Coke']]
 
 def C1(itemsets):
     C1 = {}
@@ -103,34 +103,53 @@ def Lk(ck,minimumSup):
             del ck[key]
     return ck
 
+def RuleGeneration(candidate,i,support,conf,ruleDic,lkDic):
+        for rule in itertools.combinations(candidate,i):
+            #查
+            times = lkDic.get("l"+str(i)).get(rule)
+            #check confidence
+            if((support/times)<conf):
+                continue
+            ruleDic.update({tuple(rule):tuple(set(candidate).difference(set(rule)))})
+            if(i>1):
+                RuleGeneration(candidate,i-1,support,conf,ruleDic,lkDic)               
+        return ruleDic
 
 
 def Apriori(itemsets):
     #TODO itemset minmunsup conf
+    lkDic = {}
+    ruleDic = {}
     minimumSup = 2
     conf = 0.5
     c1 = C1(itemsets)
     l1 = Lk(c1,minimumSup)
+    lkDic.update({'l1':l1})
     c2 = C2(l1,itemsets)
     #TODO range
     for k in range(2,1000):
         #LK
         locals()['l%s'%k] = Lk(locals()['c%s'%k],minimumSup)
+        if(not locals()['l%s'%(k)]):
+            break
+        lkDic.update({'l'+str(k):locals()['l%s'%k]})
         #produce listL(k+1) JoinStep 
         locals()['listL%s'%(k+1)] = JoinStep(locals()['l%s'%k])
         #PruneStep listL(k+1) 
         locals()['listL%s'%(k+1)] = PruneStep(locals()['listL%s'%(k+1)],locals()['l%s'%k])
         #ck
         locals()['c%s'%(k+1)] = Search(locals()['listL%s'%(k+1)],itemsets)
-
         #TODO
         if(not locals()['c%s'%(k+1)]):
-            for i in range(k,0,-1):
-                for key,value in locals()['l%s'%i].items():
-                    for s in itertools.combinations(key, len(key)):
-                        print("S=====>",s)
-
-                print('===L',i,'========>',locals()['l%s'%i])
             break
+        
+    for i in range(len(lkDic),1,-1):
+        candidateLi = lkDic.get("l"+str(i))
+        for key,value in candidateLi.items():
+            #母項個數 
+            candidate = list(key)
+            ruleDic = RuleGeneration(candidate,i-1,value,conf,ruleDic,lkDic)    
 
-Apriori(itemsets)
+    return ruleDic
+
+print(Apriori(itemsets))
