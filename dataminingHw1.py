@@ -1,6 +1,7 @@
 import itertools
 import operator
 
+"""
 itemsets = [
     ["A", "C", "D"],
     ["B", "C", "E"],
@@ -10,8 +11,27 @@ itemsets = [
     #   ["B", "E", "D", "A"],
     #   ["A", "C", "E"]
 ]
-# itemsets = [["Bread","Milk"],["Bread","Diaper","Beer","Eggs"],["Milk","Diaper","Beer","Coke"],["Bread","Milk","Diaper","Beer"],["Bread","Milk","Diaper","Coke"]]
-
+"""
+itemsets = [
+    ["a", "c", "d","f","g","i","m","p"],
+    ["a", "b", "c","f","i","m","o"],
+    ["b","f","h","j","o"],
+    ["b", "c", "k","s","p"],
+    ["a", "c", "e","f","l","m","n","p"]
+]
+"""
+itemsets = [
+    ["Bread", "Milk", "Beer"],
+    ["Bread", "Coffee"],
+    ["Bread", "Egg"],
+    ["Bread", "Milk", "Coffee"],
+    ["Milk", "Egg"],
+    ["Bread", "Egg"],
+    ["Milk", "Egg"],
+    ["Bread", "Milk", "Egg", "Beer"],
+    ["Bread", "Milk", "Egg"]
+]
+"""
 
 def C1(itemsets):
     C1 = {}
@@ -42,16 +62,12 @@ def ListC2(l1):
 
 # search Ck support
 def Search(listCk, itemsets):
-    """
-    Search
-    """
-    # TODO 前一步就產生CK??
     ck = {}
     for itemset in itemsets:
         for data in listCk:
             count = ck.get(tuple(data))
-            # TODO count值處理
-            if count == None:
+            # TODO count值處理 三元？？
+            if not count:
                 count = 0
             match = 0
             for thing in data:
@@ -120,34 +136,32 @@ def Lk(ck, minimumSup):
     return ck
 
 
-def RuleGeneration(candidate, i, support, conf, ruleDic, lkDic):
+# TODO while????
+def RuleGeneration(candidate, i, support, conf, ruleList, lkDic):
     for rule in itertools.combinations(candidate, i):
         # 查
         times = lkDic.get("l" + str(i)).get(rule)
         # check confidence
         if (support / times) < conf:
             continue
-        ruleDic.update({tuple(rule): tuple(set(candidate).difference(set(rule)))})
+        ruleList.append({rule: set(candidate).difference(set(rule))})
         if i > 1:
-            RuleGeneration(candidate, i - 1, support, conf, ruleDic, lkDic)
-    return ruleDic
+            RuleGeneration(candidate, i - 1, support, conf, ruleList, lkDic)
+    return ruleList
 
 
-def Apriori(itemsets):
-    # TODO itemset minmunsup conf
+def Apriori(itemsets, minimumSup, conf):
     lkDic = {}
-    ruleDic = {}
-    minimumSup = 2
-    conf = 0.8
+    ruleList = []
     c1 = C1(itemsets)
     l1 = Lk(c1, minimumSup)
     lkDic.update({"l1": l1})
     listC2 = ListC2(l1)
     c2 = Search(listC2, itemsets)
-    # TODO range
-    for k in range(2, 1000):
+    for k in range(2, len(itemsets)):
         # LK
         locals()["l%s" % k] = Lk(locals()["c%s" % k], minimumSup)
+
         if not locals()["l%s" % (k)]:
             break
         lkDic.update({"l" + str(k): locals()["l%s" % k]})
@@ -159,7 +173,7 @@ def Apriori(itemsets):
         )
         # ck
         locals()["c%s" % (k + 1)] = Search(locals()["listL%s" % (k + 1)], itemsets)
-        # TODO
+
         if not locals()["c%s" % (k + 1)]:
             break
 
@@ -168,27 +182,23 @@ def Apriori(itemsets):
         for key, value in candidateLi.items():
             # 母項個數
             candidate = list(key)
-            ruleDic = RuleGeneration(candidate, i - 1, value, conf, ruleDic, lkDic)
+            ruleList = RuleGeneration(candidate, i - 1, value, conf, ruleList, lkDic)
 
-    return ruleDic
+    return ruleList
 
+"""
+print("================================")
+print(Apriori(itemsets, 2, 0.8))
+print("================================")
+"""
 
-print(Apriori(itemsets))
-
-
-c1 = C1(itemsets)
-sorted_x = sorted(c1.items(), key=operator.itemgetter(1))
-sorted_x.reverse()
-orderList = []
-for itemset in sorted_x:
-    orderList.append("".join(itemset[0]))
-    
 def link(node, linkDic):
     point = linkDic.get(node.name)
     if point:
         node.next = point
 
     linkDic.update({node.name: node})
+
 
 class Node:
     def __init__(self, name):
@@ -202,32 +212,93 @@ class Node:
         for child in self.children:
             if node.name == child.name:
                 child.value += 1
-                print("child.name", child.name)
-                print("child.value", child.value)
-                print("node.next", node.next)
-                print("node.parent", node.parent)
                 return child
 
         self.children.append(node)
         node.parent = self
-        link(node,linkDic)
-        print("node.name", node.name)
-        print("node.value", node.value)
-        print("node.next", node.next)
-        print("node.parent", node.parent)
+        link(node, linkDic)
         return node
+    def disp(self, ind=1):
+        print(' ' * ind, self.name, ' ', self.value)
+        for child in self.children:
+            child.disp(ind + 1)
 
 
+def Path(node):
+    path = []
+    while node:
+        if node.name != "root":
+            path.append(node.name)
+        node = node.parent
+    path.reverse()
+    return path
 
 
+def FPtree(itemsets, orderList):
+    root = Node("root")
+    root.value = None
+    linkDic = {}
+    for itemset in itemsets:
+        for item in itemset.copy():
+            if item not in orderList:
+                itemset.remove(item)
+        itemset = sorted(itemset, key=orderList.index)
+        parent = root
+        for item in itemset:
+            node = Node(item)
+            parent = parent.insert(node, linkDic)
+    print("===========================================")       
+    print(root.disp())
+    print("===========================================")   
+    return linkDic
 
-root = Node("root")
-root.value = None
-linkDic = {}
-for itemset in itemsets:
-    itemset = sorted(itemset, key=orderList.index)
-    parent = root
-    for item in itemset:
-        node = Node(item)
-        parent = parent.insert(node, linkDic)
+
+def FreqTree(value, minimumSup):
+    dic = {}
+    for item in value:
+        num = item[1]
+        for node in item[0]:
+            count = dic.get(node)
+            num = num if not count else count + num
+            dic.update({node: num})
+    dic = Lk(dic, minimumSup)
+    return dic
+
+
+def FP_Growth(itemsets, minimumSup):
+    c1 = C1(itemsets)
+    l1 = Lk(c1, minimumSup)
+
+    sorted_x = sorted(l1.items(), key=operator.itemgetter(1))
+    sorted_x.reverse()
+    orderList = []
+    for itemset in sorted_x:
+        orderList.append("".join(itemset[0]))
+    orderList = ['f','c','a','b','m','p']
+    linkDic = FPtree(itemsets, orderList)
+    
+    orderList.reverse()
+    pathDic = {}
+    for item in orderList:
+
+        dot = linkDic.get(item)
+        pathList = []
+        while dot:
+            path = Path(dot.parent)
+            if path:
+                pathList.append([path, dot.value])
+            dot = dot.next
+        pathDic.update({linkDic.get(item).name: pathList})
+        #print("==========PATH====================\n",linkDic.get(item).name,"\n",pathList)
+
+    orderList.reverse()
+
+    for key, value in pathDic.items():
+        print("key==========>\n" , key)
+        print("value==========>\n", value)
+        print(FreqTree(value, minimumSup))
+        # TODO recursive rule generation
+
+
+FP_Growth(itemsets, 3)
 
